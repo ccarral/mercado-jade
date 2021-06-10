@@ -1,6 +1,8 @@
 package mercado;
 
-public class Producto {
+import jade.content.Concept;
+
+public class Producto implements Concept {
 
   private String nombre;
 
