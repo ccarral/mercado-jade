@@ -1,10 +1,21 @@
 package mercado;
 
-import jade.content.Predicate;
+import jade.content.*;
 
-public class Disponible implements Predicate {
+public class Disponible implements Predicate{
   private Producto producto;
   private Integer cantidad;
+
+ public Disponible(Producto p, Integer c){
+    producto = p;
+    cantidad = c;
+  }
+
+  public Disponible(){
+     producto = null;
+     cantidad = 0;
+  }
+
 
   public Producto getProducto() {
     return this.producto;
@@ -18,7 +29,7 @@ public class Disponible implements Predicate {
     return this.cantidad;
   }
 
-  public void setCantidad(Integer c) {
-    this.cantidad = c;
+  public void setCantidad(Integer p) {
+    this.cantidad = p;
   }
 }
