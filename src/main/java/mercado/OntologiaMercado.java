@@ -25,6 +25,15 @@ public class OntologiaMercado extends Ontology {
   public static final String DUENO = "dueño";
   public static final String ACREEDOR = "acreedor";
   public static final String DEUDOR = "deudor";
+  public static final String SOLICITARENVIO = "solicitarEnvio";
+  public static final String DIRECCION = "direccion";
+  public static final String DESTINATARIO = "destinatario";
+  public static final String DIREC = "direc";
+  public static final String VENDEDOR = "vendedor";
+  public static final String CALLE = "calle";
+  public static final String NUMERO = "numero";
+  public static final String CIUDAD = "ciudad";
+  public static final String TELEFONO = "telefono";
 
   private OntologiaMercado() {
     super(NOMBRE_ONTOLOGIA, BasicOntology.getInstance());
@@ -34,6 +43,8 @@ public class OntologiaMercado extends Ontology {
       add(new PredicateSchema(DISPONIBLE), Disponible.class);
       add(new PredicateSchema(EXISTENCIAS), Existencias.class);
       add(new AgentActionSchema(PAGAR), Pagar.class);
+      add(new AgentActionSchema(SOLICITARENVIO), SolicitarEnvio.class);
+      add(new ConceptSchema(DIRECCION), Direccion.class);
 
       ConceptSchema producto = (ConceptSchema) getSchema(PRODUCTO);
       producto.add(NOMBRE_PRODUCTO, (PrimitiveSchema) getSchema(BasicOntology.STRING));
@@ -55,6 +66,22 @@ public class OntologiaMercado extends Ontology {
       pagar.add(ACREEDOR, (ConceptSchema) getSchema(BasicOntology.AID));
       pagar.add(DEUDOR, (ConceptSchema) getSchema(BasicOntology.AID));
       pagar.add(CANTIDAD, (PrimitiveSchema) getSchema(BasicOntology.INTEGER));
+
+      AgentActionSchema solicitarEnvio = (AgentActionSchema) getSchema(SOLICITARENVIO);
+      solicitarEnvio.add(DESTINATARIO, (PrimitiveSchema) getSchema(BasicOntology.STRING));
+      solicitarEnvio.add(DIREC, (PrimitiveSchema) getSchema(BasicOntology.STRING));
+      solicitarEnvio.add(VENDEDOR, (PrimitiveSchema) getSchema(BasicOntology.STRING));
+
+
+      ConceptSchema direccion = (ConceptSchema) getSchema(PRODUCTO);
+      direccion.add(CALLE, (PrimitiveSchema) getSchema(BasicOntology.STRING));
+      direccion.add(NUMERO, (PrimitiveSchema) getSchema(BasicOntology.STRING));
+      direccion.add(CIUDAD, (PrimitiveSchema) getSchema(BasicOntology.STRING));
+      direccion.add(TELEFONO, (PrimitiveSchema) getSchema(BasicOntology.STRING));
+
+
+
+
 
     } catch (Exception e) {
       e.printStackTrace();
