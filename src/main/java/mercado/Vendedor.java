@@ -4,7 +4,6 @@ import jade.content.*;
 import jade.content.lang.*;
 import jade.content.lang.sl.*;
 import jade.content.onto.*;
-import jade.content.onto.basic.*;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
@@ -20,6 +19,9 @@ public class Vendedor extends Agent {
   private Codec codec = new SLCodec();
 
   private LinkedList<Existencias> existencias;
+  private LinkedList<Pagar> pagos;
+
+  private double saldo = 0.0;
 
   @Override
   public void setup() {
@@ -28,6 +30,8 @@ public class Vendedor extends Agent {
     this.getContentManager().registerOntology(ontologia);
 
     this.existencias = new LinkedList<Existencias>();
+
+    this.pagos = new LinkedList<>();
 
     Object[] args = this.getArguments();
 
@@ -55,10 +59,10 @@ public class Vendedor extends Agent {
       e.printStackTrace();
     }
 
-    this.addBehaviour(new RecibirSolicitudDisponibilidad());
+    this.addBehaviour(new RecibirSolicitud());
   }
 
-  private class RecibirSolicitudDisponibilidad extends CyclicBehaviour {
+  private class RecibirSolicitud extends CyclicBehaviour {
     public void action() {
       ACLMessage mensaje = myAgent.receive();
       // mensaje.setOntology(OntologiaMercado.NOMBRE_ONTOLOGIA);
@@ -67,15 +71,14 @@ public class Vendedor extends Agent {
         // Se recibió un mensaje, hay que procesarlo.
         ACLMessage respuesta = mensaje.createReply();
 
-        // No lo tiene por default
-        respuesta.setPerformative(ACLMessage.REFUSE);
-
         try {
           ContentManager cm = myAgent.getContentManager();
           ContentElement ce = null;
           ce = cm.extractContent(mensaje);
 
           if (mensaje.getPerformative() == ACLMessage.QUERY_IF) {
+            // No lo tiene por default
+            respuesta.setPerformative(ACLMessage.REFUSE);
             if (ce instanceof Disponible) {
               Disponible pregunta = (Disponible) ce;
               for (Existencias e : existencias) {
@@ -97,6 +100,24 @@ public class Vendedor extends Agent {
                 }
               }
             }
+          } else if (mensaje.getPerformative() == ACLMessage.PROPOSE) {
+            if (ce instanceof Pagar) {
+              Pagar pago = (Pagar) ce;
+              // Procesar pago
+
+              respuesta.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+
+              saldo += pago.getMonto();
+              pagos.add(pago);
+
+              // Buscar producto y restarle la cantidad que fue comprada
+
+              for (Existencias e : existencias) {
+                if (e.getProducto().getNombre().equals(pago.getProducto().getNombre())) {
+                  e.setCantidad(e.getCantidad() - pago.getCantidad());
+                }
+              }
+            }
           }
 
           send(respuesta);
@@ -110,5 +131,12 @@ public class Vendedor extends Agent {
     }
   }
 
-  public void takeDown() {}
+  public void takeDown() {
+    System.out.println("Pagos al vendedor:" + getName());
+    for (Pagar p : pagos) {
+      System.out.println(p.toString());
+    }
+
+    System.out.printf("Saldo final del vendedor: %.2f\n", saldo);
+  }
 }
