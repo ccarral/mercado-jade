@@ -1,12 +1,21 @@
 package mercado;
 
-import jade.content.Predicate;
+import jade.content.*;
+import jade.core.*;
 
 public class Existencias implements Predicate {
   private Producto producto;
   private int cantidad;
   private double precio;
+  private AID dueño;
 
+  public void setDueño(AID id) {
+    this.dueño = id;
+  }
+
+  public AID getDueño() {
+    return this.dueño;
+  }
 
   public int getCantidad() {
     return cantidad;
@@ -30,7 +39,17 @@ public class Existencias implements Predicate {
     this.precio = precioUnitario;
   }
 
+  public Existencias() {
+    producto = null;
+    cantidad = 0;
+    precio = 0.0;
+  }
+
   public Producto getProducto() {
     return this.producto;
+  }
+
+  public void setProducto(Producto p) {
+    this.producto = p;
   }
 }

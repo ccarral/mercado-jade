@@ -36,7 +36,9 @@ public class Vendedor extends Agent {
       String producto = args[i].toString();
       Integer cantidad = Integer.valueOf(args[i + 1].toString());
       Double precio = Double.valueOf(args[i + 2].toString());
-      this.existencias.push(new Existencias(producto, cantidad, precio));
+      Existencias e = new Existencias(producto, cantidad, precio);
+      e.setDueño(getAID());
+      this.existencias.push(e);
     }
 
     // Registrar en la sección amarilla.
@@ -47,9 +49,9 @@ public class Vendedor extends Agent {
     descripcionServicio.setName(getLocalName() + "-vendedor");
     descripcion.addServices(descripcionServicio);
 
-    try{
+    try {
       DFService.register(this, descripcion);
-    }catch (FIPAException e){
+    } catch (FIPAException e) {
       e.printStackTrace();
     }
 
@@ -64,27 +66,33 @@ public class Vendedor extends Agent {
       if (mensaje != null) {
         // Se recibió un mensaje, hay que procesarlo.
         ACLMessage respuesta = mensaje.createReply();
+
+        // No lo tiene por default
+        respuesta.setPerformative(ACLMessage.REFUSE);
+
         try {
           ContentManager cm = myAgent.getContentManager();
           ContentElement ce = null;
-          System.out.println("Recibiendo mensaje: "+ mensaje.getContent());
-
           ce = cm.extractContent(mensaje);
 
-          if (mensaje.getPerformative()==ACLMessage.QUERY_IF) {
+          if (mensaje.getPerformative() == ACLMessage.QUERY_IF) {
             if (ce instanceof Disponible) {
               Disponible pregunta = (Disponible) ce;
-              for (Existencias e:existencias) {
-                if(e.getProducto().getNombre().equals(pregunta.getProducto().getNombre())){
-                  if(e.getCantidad() >= pregunta.getCantidad()){
+              for (Existencias e : existencias) {
+                if (e.getProducto().getNombre().equals(pregunta.getProducto().getNombre())) {
+                  if (e.getCantidad() >= pregunta.getCantidad()) {
                     // El producto sí existe. Informar cuanto es el precio unitario
-                    System.out.println("Si tenemos!");
+                    Existencias respuestaExistencias = new Existencias();
+                    respuestaExistencias.setDueño(getAID());
+
+                    // Regresar una respuesta con el número de artículos que solicitó y el precio
+                    // total de arts*precio.
+                    respuestaExistencias.setCantidad(pregunta.getCantidad());
+                    respuestaExistencias.setPrecio(e.getPrecio());
+                    respuestaExistencias.setProducto(e.getProducto());
+
                     respuesta.setPerformative(ACLMessage.INFORM);
-                    getContentManager().fillContent(respuesta,e);
-                  } else{
-                    // El producto no está disponible o no hay cantidad suficiente
-                    // para despachar
-                    respuesta.setPerformative(ACLMessage.REFUSE);
+                    getContentManager().fillContent(respuesta, respuestaExistencias);
                   }
                 }
               }
