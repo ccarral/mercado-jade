@@ -3,6 +3,9 @@ package mercado;
 import jade.content.*;
 import jade.core.*;
 
+// Existencias(persona, producto,cantidad,precio)
+// Existencias(Luis, manzanas, 10, 20);
+
 public class Existencias implements Predicate {
   private Producto producto;
   private int cantidad;

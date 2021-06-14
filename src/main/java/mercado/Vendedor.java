@@ -4,6 +4,8 @@ import jade.content.*;
 import jade.content.lang.*;
 import jade.content.lang.sl.*;
 import jade.content.onto.*;
+import jade.content.onto.basic.Action;
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
@@ -22,6 +24,7 @@ public class Vendedor extends Agent {
   private LinkedList<Pagar> pagos;
 
   private double saldo = 0.0;
+  private double consumoMinimo = 70;
 
   @Override
   public void setup() {
@@ -65,19 +68,20 @@ public class Vendedor extends Agent {
   private class RecibirSolicitud extends CyclicBehaviour {
     public void action() {
       ACLMessage mensaje = myAgent.receive();
-      // mensaje.setOntology(OntologiaMercado.NOMBRE_ONTOLOGIA);
 
       if (mensaje != null) {
         // Se recibió un mensaje, hay que procesarlo.
+        mensaje.setOntology(ontologia.getName());
         ACLMessage respuesta = mensaje.createReply();
 
         try {
           ContentManager cm = myAgent.getContentManager();
           ContentElement ce = null;
-          ce = cm.extractContent(mensaje);
 
           if (mensaje.getPerformative() == ACLMessage.QUERY_IF) {
             // No lo tiene por default
+            ce = cm.extractContent(mensaje);
+
             respuesta.setPerformative(ACLMessage.REFUSE);
             if (ce instanceof Disponible) {
               Disponible pregunta = (Disponible) ce;
@@ -101,22 +105,81 @@ public class Vendedor extends Agent {
               }
             }
           } else if (mensaje.getPerformative() == ACLMessage.PROPOSE) {
-            if (ce instanceof Pagar) {
-              Pagar pago = (Pagar) ce;
-              // Procesar pago
 
+            Action a = (Action) getContentManager().extractContent(mensaje);
+
+            Pagar pago = (Pagar) a.getAction();
+            // Procesar pago
+
+            respuesta.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+
+            saldo += pago.getMonto();
+            pagos.add(pago);
+
+            System.out.printf(
+                "\n%s: Recibido el pago de %s por %.2f\n",
+                getAID().getName(), pago.getDeudor().getName(), pago.getMonto());
+
+            // Buscar producto y restarle la cantidad que fue comprada
+
+            for (Existencias e : existencias) {
+              if (e.getProducto().getNombre().equals(pago.getProducto().getNombre())) {
+                e.setCantidad(e.getCantidad() - pago.getCantidad());
+              }
+            }
+
+          } else if (mensaje.getPerformative() == ACLMessage.REQUEST) {
+
+            Action a = (Action) getContentManager().extractContent(mensaje);
+            SolicitarEnvio solicitud = (SolicitarEnvio) a.getAction();
+
+            // Procesar solicitud de envio
+            // Obtener AID de quien lo solicita
+            AID destinatario = solicitud.getDestinatario();
+            // Verificar que consumió lo suficiente para enviar
+
+            double consumo = 0.0;
+
+            for (Pagar p : pagos) {
+              if (p.getDeudor().getName().equals(destinatario.getName())) {
+                consumo += p.getMonto();
+              }
+            }
+
+            if (consumo >= consumoMinimo) {
+              // Generar mensaje para el distribuidor
+              ACLMessage mensajeDistribuidor = new ACLMessage(ACLMessage.REQUEST);
+
+              System.out.printf(
+                  "\n%s: Se cumple el consumo mínimo. Reenviando solicitud a distribuidor\n",
+                  getAID().getName());
+
+              // Aceptar solicitud
               respuesta.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
 
-              saldo += pago.getMonto();
-              pagos.add(pago);
+              // Buscar un distribuidor
+              DFAgentDescription busqueda = new DFAgentDescription();
+              ServiceDescription desc = new ServiceDescription();
+              desc.setType("Distribuidor");
+              busqueda.addServices(desc);
 
-              // Buscar producto y restarle la cantidad que fue comprada
+              DFAgentDescription[] resultados = DFService.search(myAgent, busqueda);
 
-              for (Existencias e : existencias) {
-                if (e.getProducto().getNombre().equals(pago.getProducto().getNombre())) {
-                  e.setCantidad(e.getCantidad() - pago.getCantidad());
-                }
-              }
+              mensajeDistribuidor.setOntology(ontologia.getName());
+              mensajeDistribuidor.setLanguage(codec.getName());
+              mensajeDistribuidor.addReceiver(resultados[0].getName());
+
+              Action actOp = new Action(getAID(), solicitud);
+
+              getContentManager().fillContent(mensajeDistribuidor, actOp);
+
+              send(mensajeDistribuidor);
+
+            } else {
+              // No se consumió lo suficiente, negar solicitud
+              System.out.printf(
+                  "\n%s: No se cumple el conumo mínimo. Negando solicitud de envio\n", getName());
+              respuesta.setPerformative(ACLMessage.REFUSE);
             }
           }
 
@@ -132,7 +195,7 @@ public class Vendedor extends Agent {
   }
 
   public void takeDown() {
-    System.out.println("Pagos al vendedor:" + getName());
+    System.out.println("\nPagos al vendedor:" + getName());
     for (Pagar p : pagos) {
       System.out.println(p.toString());
     }

@@ -68,20 +68,15 @@ public class OntologiaMercado extends Ontology {
       pagar.add(CANTIDAD, (PrimitiveSchema) getSchema(BasicOntology.INTEGER));
 
       AgentActionSchema solicitarEnvio = (AgentActionSchema) getSchema(SOLICITARENVIO);
-      solicitarEnvio.add(DESTINATARIO, (PrimitiveSchema) getSchema(BasicOntology.STRING));
-      solicitarEnvio.add(DIREC, (PrimitiveSchema) getSchema(BasicOntology.STRING));
-      solicitarEnvio.add(VENDEDOR, (PrimitiveSchema) getSchema(BasicOntology.STRING));
+      solicitarEnvio.add(DESTINATARIO, (ConceptSchema) getSchema(BasicOntology.AID));
+      solicitarEnvio.add(DIRECCION, (ConceptSchema) getSchema(DIRECCION));
+      solicitarEnvio.add(VENDEDOR, (ConceptSchema) getSchema(BasicOntology.AID));
 
-
-      ConceptSchema direccion = (ConceptSchema) getSchema(PRODUCTO);
+      ConceptSchema direccion = (ConceptSchema) getSchema(DIRECCION);
       direccion.add(CALLE, (PrimitiveSchema) getSchema(BasicOntology.STRING));
-      direccion.add(NUMERO, (PrimitiveSchema) getSchema(BasicOntology.STRING));
+      direccion.add(NUMERO, (PrimitiveSchema) getSchema(BasicOntology.INTEGER));
       direccion.add(CIUDAD, (PrimitiveSchema) getSchema(BasicOntology.STRING));
       direccion.add(TELEFONO, (PrimitiveSchema) getSchema(BasicOntology.STRING));
-
-
-
-
 
     } catch (Exception e) {
       e.printStackTrace();

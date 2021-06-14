@@ -6,7 +6,7 @@ import jade.core.AID;
 public class SolicitarEnvio implements AgentAction {
 
    private AID destinatario;
-   private String direc;
+   private Direccion direccion;
    private AID vendedor;
 
    public AID getDestinatario() {
@@ -17,12 +17,12 @@ public class SolicitarEnvio implements AgentAction {
       this.destinatario = destinatario;
    }
 
-   public String getDirec() {
-      return direc;
+   public Direccion getDireccion() {
+      return direccion;
    }
 
-   public void setDireccion(String direccion) {
-      this.direc= direc;
+   public void setDireccion(Direccion direccion) {
+      this.direccion = direccion;
    }
 
    public AID getVendedor() {

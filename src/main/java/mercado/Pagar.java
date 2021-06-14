@@ -3,6 +3,8 @@ package mercado;
 import jade.content.AgentAction;
 import jade.core.AID;
 
+// Pagar(Luis,Alejandra, $100,"Manzana",5);
+
 public class Pagar implements AgentAction {
   private AID deudor = null;
   private AID acreedor = null;
@@ -38,12 +40,13 @@ public class Pagar implements AgentAction {
     return producto;
   }
 
-  public void setProducto(Producto producto) {
-    this.producto = producto;
+  public void setProducto(Producto p) {
+    this.producto = p;
   }
 
   public String toString() {
-    return String.format("%s  %s  %.2f", getDeudor(), getProducto().getNombre(), getMonto());
+    return String.format(
+        "%s  %s  %.2f", getDeudor().getName(), getProducto().getNombre(), getMonto());
   }
 
   public int getCantidad() {
